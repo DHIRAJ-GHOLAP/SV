@@ -280,70 +280,6 @@
             line-height: 1.4 !important;
             font-size: 0.85rem !important;
         }
-
-        /* Robust Print Styles */
-        #printContainer {
-            display: none;
-        }
-
-        @media print {
-            /* Hide everything but the print container */
-            body > *:not(#printContainer) {
-                display: none !important;
-            }
-
-            #printContainer {
-                display: block !important;
-                background: white;
-                color: black;
-            }
-
-            /* Custom Report Styling within the print container */
-            .print-report {
-                font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 13pt;
-                line-height: 1.6;
-                padding: 15mm;
-            }
-
-            .print-header {
-                text-align: center;
-                border-bottom: 3pt solid #2d6e2d;
-                padding-bottom: 10pt;
-                margin-bottom: 25pt;
-            }
-
-            .print-header h1 {
-                margin: 0;
-                font-size: 26pt;
-                color: #2d6e2d;
-            }
-
-            .print-diagnosis {
-                padding: 15pt;
-                border-radius: 8pt;
-                margin-bottom: 25pt;
-                font-weight: bold;
-                font-size: 18pt;
-                border-left: 8pt solid #2d6e2d;
-            }
-
-            .print-pos { background: #e6f4ea !important; color: #1b5e20 !important; border-left-color: #2e7d32; }
-            .print-neg { background: #fdecea !important; color: #b71c1c !important; border-left-color: #c62828; }
-
-            .print-section { margin-bottom: 25pt; page-break-inside: avoid; }
-            .print-section h2 { font-size: 16pt; border-bottom: 1.5pt solid #ddd; padding-bottom: 6pt; margin-bottom: 15pt; color: #2d6e2d; text-transform: uppercase; }
-            .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10pt 25pt; }
-            .print-field { display: flex; align-items: flex-start; margin-bottom: 5pt; }
-            .print-label { font-weight: 600; width: 150pt; color: #555; }
-            .print-value { flex: 1; color: #000; }
-            .print-full { grid-column: span 2; }
-            
-            @page {
-                size: A4;
-                margin: 0;
-            }
-        }
     </style>
 </head>
 
@@ -897,81 +833,153 @@
             }, 5000);
         }
 
-        // P        function printPatientRecord(recordId) {
+        // Print and PDF Functions
+        function printPatientRecord(recordId) {
             const record = allRecords.find(r => r.id === recordId);
             if (!record) return;
 
-            const printContainer = document.getElementById('printContainer');
-            
-            // Build the report HTML inside the hidden print area
-            printContainer.innerHTML = `
-                <div class="print-report">
-                    <div class="print-header">
-                        <h1>Sandhigata Vata Diagnosis Report</h1>
-                        <p>Patient Name: ${record.formData.name} | Report ID: ${record.id}</p>
-                        <p>Date: ${new Date(record.timestamp).toLocaleString()}</p>
-                    </div>
+            // Create print-friendly HTML
+            const printContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patient Report - ${record.formData.name}</title>
+    <style>
+        @page { size: A4; margin: 15mm; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; color: #333; font-size: 14px; line-height: 1.5; margin: 0; padding: 0; }
+        .container { width: 100%; max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; border-bottom: 2px solid #2d6e2d; padding-bottom: 10px; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 22px; color: #2d6e2d; }
+        .header p { margin: 5px 0; font-size: 12px; }
+        .diagnosis { padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; font-size: 16px; }
+        .positive { background: #e6f4ea; border-left: 5px solid #2e7d32; color: #1b5e20; }
+        .negative { background: #fdecea; border-left: 5px solid #c62828; color: #b71c1c; }
+        .section { margin-bottom: 20px; page-break-inside: avoid; }
+        .section h2 { font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 12px; color: #2d6e2d; text-transform: uppercase; letter-spacing: 0.5px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+        .field { display: flex; align-items: flex-start; margin-bottom: 4px; }
+        .label { font-weight: 600; width: 140px; color: #555; font-size: 12px; text-transform: uppercase; }
+        .value { flex: 1; color: #000; }
+        .full { grid-column: span 2; }
+        .notes-box { padding: 10px; border: 1px solid #eee; background: #fafafa; border-radius: 4px; min-height: 60px; }
+        .footer { margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px; font-size: 10px; text-align: center; color: #999; }
+        @media print { 
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sandhigata Vata Diagnosis Report</h1>
+            <p>Date Generated: ${new Date().toLocaleString()}</p>
+            <p>Patient Assessment Date: ${new Date(record.timestamp).toLocaleString()}</p>
+            <p>Record ID: ${record.id}</p>
+        </div>
 
-                    <div class="print-diagnosis ${record.diagnosis.isPositive ? 'print-pos' : 'print-neg'}">
-                        RESULT: ${record.diagnosis.isPositive ? 'POSITIVE (SANDHIGATA VATA / OSTEOARTHRITIS)' : 'NEGATIVE'}
-                    </div>
+        <div class="diagnosis ${record.diagnosis.isPositive ? 'positive' : 'negative'}">
+            Final Diagnosis: ${record.diagnosis.isPositive ? 'POSITIVE (Sandhigata Vata / Osteoarthritis)' : 'NEGATIVE'}
+        </div>
 
-                    <div class="print-section">
-                        <h2>Patient Details</h2>
-                        <div class="print-grid">
-                            <div class="print-field"><div class="print-label">Name:</div><div class="print-value">${record.formData.name}</div></div>
-                            <div class="print-field"><div class="print-label">Age/Gender:</div><div class="print-value">${record.formData.age} yrs / ${record.formData.gender}</div></div>
-                            <div class="print-field"><div class="print-label">Contact:</div><div class="print-value">${record.formData.contact || 'N/A'}</div></div>
-                            <div class="print-field"><div class="print-label">OPD/IPD:</div><div class="print-value">${record.formData.opdIpdNo || 'N/A'}</div></div>
-                        </div>
-                    </div>
+        <div class="section">
+            <h2>Patient Information</h2>
+            <div class="grid">
+                <div class="field"><div class="label">Name:</div><div class="value">${record.formData.name}</div></div>
+                <div class="field"><div class="label">Age:</div><div class="value">${record.formData.age} yrs</div></div>
+                <div class="field"><div class="label">Gender:</div><div class="value">${record.formData.gender}</div></div>
+                <div class="field"><div class="label">Contact:</div><div class="value">${record.formData.contact || 'N/A'}</div></div>
+                <div class="field"><div class="label">OPD/IPD:</div><div class="value">${record.formData.opdIpdNo || 'N/A'}</div></div>
+                <div class="field"><div class="label">Occupation:</div><div class="value">${record.formData.occupation || 'N/A'}</div></div>
+            </div>
+        </div>
 
-                    <div class="print-section">
-                        <h2>Clinical Assessment</h2>
-                        <div class="print-grid">
-                            <div class="print-field"><div class="print-label">Joint Pain:</div><div class="print-value">${record.formData.hasJointPain} (${record.formData.painIntensity}/10)</div></div>
-                            <div class="print-field"><div class="print-label">Duration:</div><div class="print-value">${record.formData.painDuration || 'N/A'}</div></div>
-                            <div class="print-field print-full"><div class="print-label">Affected Joints:</div><div class="print-value">${(record.formData.affectedJoints || []).join(', ') || 'None reported'}</div></div>
-                        </div>
-                    </div>
+        <div class="section">
+            <h2>Clinical Assessment</h2>
+            <div class="grid">
+                <div class="field"><div class="label">Joint Pain:</div><div class="value">${record.formData.hasJointPain}</div></div>
+                <div class="field"><div class="label">Pain Intensity (VAS):</div><div class="value">${record.formData.painIntensity}/10</div></div>
+                <div class="field"><div class="label">Pain Duration:</div><div class="value">${record.formData.painDuration || 'N/A'}</div></div>
+                <div class="field"><div class="label">Pain Onset:</div><div class="value">${record.formData.painOnset || 'N/A'}</div></div>
+                <div class="field full"><div class="label">Affected Joints:</div><div class="value">${(record.formData.affectedJoints || []).join(', ') || 'None reported'}</div></div>
+            </div>
+        </div>
 
-                    <div class="print-section">
-                        <h2>Physical Symptoms</h2>
-                        <div class="print-grid">
-                            <div class="print-field"><div class="print-label">Swelling:</div><div class="print-value">${record.formData.swelling || 'N/A'}</div></div>
-                            <div class="print-field"><div class="print-label">Stiffness:</div><div class="print-value">${record.formData.stiffness || 'N/A'}</div></div>
-                            <div class="print-field"><div class="print-label">Crepitus:</div><div class="print-value">${record.formData.crepitus || 'N/A'}</div></div>
-                            <div class="print-field"><div class="print-label">Fever:</div><div class="print-value">${record.formData.fever || 'N/A'}</div></div>
-                        </div>
-                    </div>
+        <div class="section">
+            <h2>Physical Symptoms</h2>
+            <div class="grid">
+                <div class="field"><div class="label">Swelling:</div><div class="value">${record.formData.swelling || 'N/A'}</div></div>
+                <div class="field"><div class="label">Stiffness:</div><div class="value">${record.formData.stiffness || 'N/A'}</div></div>
+                <div class="field"><div class="label">Crepitus:</div><div class="value">${record.formData.crepitus || 'N/A'}</div></div>
+                <div class="field"><div class="label">Warmth:</div><div class="value">${record.formData.warmth || 'N/A'}</div></div>
+                <div class="field"><div class="label">Fever:</div><div class="value">${record.formData.fever || 'N/A'}</div></div>
+                <div class="field"><div class="label">Discoloration:</div><div class="value">${record.formData.discoloration || 'N/A'}</div></div>
+            </div>
+        </div>
 
-                    <div class="print-section">
-                        <h2>Lab Results</h2>
-                        <div class="print-grid">
-                            <div class="print-field"><div class="print-label">ESR:</div><div class="print-value">${record.formData.labs?.esr || 'N/A'}</div></div>
-                            <div class="print-field"><div class="print-label">CRP:</div><div class="print-value">${record.formData.labs?.crp || 'N/A'}</div></div>
-                            <div class="print-field"><div class="print-label">RA Factor:</div><div class="print-value">${record.formData.labs?.raFactor || 'N/A'}</div></div>
-                            <div class="print-field"><div class="print-label">Uric Acid:</div><div class="print-value">${record.formData.labs?.uricAcid || 'N/A'}</div></div>
-                        </div>
-                    </div>
+        <div class="section">
+            <h2>Laboratory & Radiological Tests</h2>
+            <div class="grid">
+                <div class="field"><div class="label">ESR:</div><div class="value">${record.formData.labs?.esr || 'N/A'} mm/hr</div></div>
+                <div class="field"><div class="label">CRP:</div><div class="value">${record.formData.labs?.crp || 'N/A'} mg/L</div></div>
+                <div class="field"><div class="label">RA Factor:</div><div class="value">${record.formData.labs?.raFactor || 'N/A'} IU/mL</div></div>
+                <div class="field"><div class="label">Uric Acid:</div><div class="value">${record.formData.labs?.uricAcid || 'N/A'} mg/dL</div></div>
+                <div class="field full"><div class="label">X-Ray Findings:</div><div class="value">${record.formData.labs?.xrayReport || 'No report attached'}</div></div>
+            </div>
+        </div>
 
-                    <div class="print-section">
-                        <h2>Doctor's Notes</h2>
-                        <div style="padding: 10pt; border: 1pt solid #eee; min-height: 50pt;">
-                            ${record.formData.notes || 'No notes provided.'}
-                        </div>
-                    </div>
+        <div class="section">
+            <h2>Clinical Notes</h2>
+            <div class="notes-box">
+                ${record.formData.notes || 'No additional notes provided.'}
+                <div style="margin-top: 10px; font-style: italic; color: #666;">
+                    Oil Massage Effect: ${record.formData.oilMassageEffect || 'N/A'}
                 </div>
-            `;
+            </div>
+        </div>
 
-            // Immediate window.print() is most reliable after user click
-            window.print();
+        <div class="footer">
+            Generated by Sandhigata Vata Diagnosis System • Confirms to Ayurvedic Diagnostic Standards
+        </div>
+    </div>
+</body>
+</html>`;
+
+            // Use Iframe for printing to avoid popup blockers and improve mobile reliability
+            let printFrame = document.getElementById('printFrame');
+            if (!printFrame) {
+                printFrame = document.createElement('iframe');
+                printFrame.id = 'printFrame';
+                printFrame.style.display = 'none';
+                document.body.appendChild(printFrame);
+            }
+
+            const frameDoc = printFrame.contentWindow.document;
+            frameDoc.open();
+            frameDoc.write(printContent);
+            frameDoc.close();
+
+            // Give it a small delay for styles and images to load
+            setTimeout(() => {
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+            }, 500);
         }
 
         function downloadPatientPDF(recordId) {
-            // On mobile, "Download PDF" should use the system print dialog 
-            // because "Save as PDF" is the native mobile path.
-            printPatientRecord(recordId);
+            const record = allRecords.find(r => r.id === recordId);
+            if (!record) return;
+
+            // Simple PDF download (would need jsPDF library for full implementation)
+            const dataStr = JSON.stringify(record, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
+            const exportFileDefaultName = `patient-record-${record.formData.name}-${record.id}.json`;
+
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
         }
 
         // Close modal when clicking outside
@@ -991,8 +999,6 @@
             initFirebase();
         });
     </script>
-
-    <!-- Hidden Container for Printing -->
-    <div id="printContainer"></div>
 </body>
+
 </html>
