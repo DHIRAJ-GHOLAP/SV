@@ -265,9 +265,10 @@
 
         /* Scrollable long content */
         .scrollable-content {
-            max-height: 60vh;
+            max-height: 65vh;
             overflow-y: auto;
-            padding-right: 1rem;
+            padding-right: 0.5rem;
+            -webkit-overflow-scrolling: touch;
         }
 
         /* Improve patient card readability */
@@ -745,8 +746,22 @@
                                 ${record.formData.labs.uricAcid ? `<dt>Uric Acid:</dt><dd>${record.formData.labs.uricAcid}</dd>` : ''}
 
                                 ${record.formData.labs.xrayReport ? `<dt>X-ray Report:</dt><dd>${record.formData.labs.xrayReport}</dd>` : ''}
-                                ${record.formData.labs.xrayUrl ? `<dt>X-ray Image:</dt><dd><a href="${record.formData.labs.xrayUrl}" target="_blank" class="text-blue-600 hover:underline font-medium">[View Image]</a></dd>` : ''}
                             </dl>
+                            
+                            ${record.formData.labs.xrayUrl ? `
+                            <div class="mt-4">
+                                <dt class="text-sm font-semibold mb-2">X-ray Image Preview:</dt>
+                                <dd>
+                                    <div class="border rounded-lg overflow-hidden bg-gray-100 mb-2">
+                                        <img src="${record.formData.labs.xrayUrl}" alt="X-ray" class="w-full h-auto max-h-64 object-contain mx-auto shadow-inner" loading="lazy">
+                                    </div>
+                                    <a href="${record.formData.labs.xrayUrl}" target="_blank" class="text-blue-600 hover:underline text-xs flex items-center gap-1">
+                                        <span class="material-icons" style="font-size: 14px;">open_in_new</span>
+                                        View Full Resolution
+                                    </a>
+                                </dd>
+                            </div>
+                            ` : ''}
                         </div>
                         ` : ''}
                     </div>
@@ -829,194 +844,126 @@
 <html>
 <head>
     <title>Patient Report - ${record.formData.name}</title>
-
     <style>
-        @page {
-            size: A4;
-            margin: 20mm;
-        }
-
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            color: #333;
-            font-size: 14px;
-        }
-
-        .container {
-            width: 100%;
-        }
-
-        .header {
-            text-align: center;
-            border-bottom: 2px solid #2d6e2d;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 22px;
-            color: #2d6e2d;
-        }
-
-        .header p {
-            margin: 5px 0;
-            font-size: 12px;
-        }
-
-        .diagnosis {
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-weight: bold;
-        }
-
-        .positive {
-            background: #e6f4ea;
-            border-left: 5px solid #2e7d32;
-        }
-
-        .negative {
-            background: #fdecea;
-            border-left: 5px solid #c62828;
-        }
-
-        .section {
-            margin-bottom: 18px;
-            page-break-inside: avoid;
-        }
-
-        .section h2 {
-            font-size: 16px;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-            color: #2d6e2d;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px 20px;
-        }
-
-        .field {
-            display: flex;
-        }
-
-        .label {
-            font-weight: 600;
-            width: 140px;
-        }
-
-        .value {
-            flex: 1;
-        }
-
-        .full {
-            grid-column: span 2;
-        }
-
-        .footer {
-            margin-top: 30px;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
-            font-size: 12px;
-            text-align: center;
-            color: #777;
-        }
-
-        @media print {
-            body {
-                margin: 0;
-            }
+        @page { size: A4; margin: 15mm; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; color: #333; font-size: 14px; line-height: 1.5; margin: 0; padding: 0; }
+        .container { width: 100%; max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; border-bottom: 2px solid #2d6e2d; padding-bottom: 10px; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 22px; color: #2d6e2d; }
+        .header p { margin: 5px 0; font-size: 12px; }
+        .diagnosis { padding: 15px; border-radius: 6px; margin-bottom: 20px; font-weight: bold; font-size: 16px; }
+        .positive { background: #e6f4ea; border-left: 5px solid #2e7d32; color: #1b5e20; }
+        .negative { background: #fdecea; border-left: 5px solid #c62828; color: #b71c1c; }
+        .section { margin-bottom: 20px; page-break-inside: avoid; }
+        .section h2 { font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 12px; color: #2d6e2d; text-transform: uppercase; letter-spacing: 0.5px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 20px; }
+        .field { display: flex; align-items: flex-start; margin-bottom: 4px; }
+        .label { font-weight: 600; width: 140px; color: #555; font-size: 12px; text-transform: uppercase; }
+        .value { flex: 1; color: #000; }
+        .full { grid-column: span 2; }
+        .notes-box { padding: 10px; border: 1px solid #eee; background: #fafafa; border-radius: 4px; min-height: 60px; }
+        .footer { margin-top: 40px; border-top: 1px solid #eee; padding-top: 10px; font-size: 10px; text-align: center; color: #999; }
+        @media print { 
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
         }
     </style>
 </head>
-
 <body>
+    <div class="container">
+        <div class="header">
+            <h1>Sandhigata Vata Diagnosis Report</h1>
+            <p>Date Generated: ${new Date().toLocaleString()}</p>
+            <p>Patient Assessment Date: ${new Date(record.timestamp).toLocaleString()}</p>
+            <p>Record ID: ${record.id}</p>
+        </div>
 
-<div class="container">
+        <div class="diagnosis ${record.diagnosis.isPositive ? 'positive' : 'negative'}">
+            Final Diagnosis: ${record.diagnosis.isPositive ? 'POSITIVE (Sandhigata Vata / Osteoarthritis)' : 'NEGATIVE'}
+        </div>
 
-    <!-- Header -->
-    <div class="header">
-        <h1>Sandhigata Vata Diagnosis Report</h1>
-        <p>Date: ${new Date(record.timestamp).toLocaleString()}</p>
-        <p>Record ID: ${record.id}</p>
-    </div>
+        <div class="section">
+            <h2>Patient Information</h2>
+            <div class="grid">
+                <div class="field"><div class="label">Name:</div><div class="value">${record.formData.name}</div></div>
+                <div class="field"><div class="label">Age:</div><div class="value">${record.formData.age} yrs</div></div>
+                <div class="field"><div class="label">Gender:</div><div class="value">${record.formData.gender}</div></div>
+                <div class="field"><div class="label">Contact:</div><div class="value">${record.formData.contact || 'N/A'}</div></div>
+                <div class="field"><div class="label">OPD/IPD:</div><div class="value">${record.formData.opdIpdNo || 'N/A'}</div></div>
+                <div class="field"><div class="label">Occupation:</div><div class="value">${record.formData.occupation || 'N/A'}</div></div>
+            </div>
+        </div>
 
-    <!-- Diagnosis -->
-    <div class="diagnosis ${record.diagnosis.isPositive ? 'positive' : 'negative'}">
-        Diagnosis: ${record.diagnosis.isPositive ? 'POSITIVE (Sandhigata Vata)' : 'NEGATIVE'}
-    </div>
+        <div class="section">
+            <h2>Clinical Assessment</h2>
+            <div class="grid">
+                <div class="field"><div class="label">Joint Pain:</div><div class="value">${record.formData.hasJointPain}</div></div>
+                <div class="field"><div class="label">Pain Intensity (VAS):</div><div class="value">${record.formData.painIntensity}/10</div></div>
+                <div class="field"><div class="label">Pain Duration:</div><div class="value">${record.formData.painDuration || 'N/A'}</div></div>
+                <div class="field"><div class="label">Pain Onset:</div><div class="value">${record.formData.painOnset || 'N/A'}</div></div>
+                <div class="field full"><div class="label">Affected Joints:</div><div class="value">${(record.formData.affectedJoints || []).join(', ') || 'None reported'}</div></div>
+            </div>
+        </div>
 
-    <!-- Patient Info -->
-    <div class="section">
-        <h2>Patient Information</h2>
-        <div class="grid">
-            <div class="field"><div class="label">Name:</div><div class="value">${record.formData.name}</div></div>
-            <div class="field"><div class="label">Age:</div><div class="value">${record.formData.age} years</div></div>
-            <div class="field"><div class="label">Gender:</div><div class="value">${record.formData.gender}</div></div>
-            <div class="field"><div class="label">Contact:</div><div class="value">${record.formData.contact || 'N/A'}</div></div>
-            <div class="field"><div class="label">OPD/IPD:</div><div class="value">${record.formData.opdIpdNo || 'N/A'}</div></div>
-            <div class="field"><div class="label">Occupation:</div><div class="value">${record.formData.occupation || 'N/A'}</div></div>
+        <div class="section">
+            <h2>Physical Symptoms</h2>
+            <div class="grid">
+                <div class="field"><div class="label">Swelling:</div><div class="value">${record.formData.swelling || 'N/A'}</div></div>
+                <div class="field"><div class="label">Stiffness:</div><div class="value">${record.formData.stiffness || 'N/A'}</div></div>
+                <div class="field"><div class="label">Crepitus:</div><div class="value">${record.formData.crepitus || 'N/A'}</div></div>
+                <div class="field"><div class="label">Warmth:</div><div class="value">${record.formData.warmth || 'N/A'}</div></div>
+                <div class="field"><div class="label">Fever:</div><div class="value">${record.formData.fever || 'N/A'}</div></div>
+                <div class="field"><div class="label">Discoloration:</div><div class="value">${record.formData.discoloration || 'N/A'}</div></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Laboratory & Radiological Tests</h2>
+            <div class="grid">
+                <div class="field"><div class="label">ESR:</div><div class="value">${record.formData.labs?.esr || 'N/A'} mm/hr</div></div>
+                <div class="field"><div class="label">CRP:</div><div class="value">${record.formData.labs?.crp || 'N/A'} mg/L</div></div>
+                <div class="field"><div class="label">RA Factor:</div><div class="value">${record.formData.labs?.raFactor || 'N/A'} IU/mL</div></div>
+                <div class="field"><div class="label">Uric Acid:</div><div class="value">${record.formData.labs?.uricAcid || 'N/A'} mg/dL</div></div>
+                <div class="field full"><div class="label">X-Ray Findings:</div><div class="value">${record.formData.labs?.xrayReport || 'No report attached'}</div></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Clinical Notes</h2>
+            <div class="notes-box">
+                ${record.formData.notes || 'No additional notes provided.'}
+                <div style="margin-top: 10px; font-style: italic; color: #666;">
+                    Oil Massage Effect: ${record.formData.oilMassageEffect || 'N/A'}
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Generated by Sandhigata Vata Diagnosis System • Confirms to Ayurvedic Diagnostic Standards
         </div>
     </div>
-
-    <!-- Pain Assessment -->
-    <div class="section">
-        <h2>Pain Assessment</h2>
-        <div class="grid">
-            <div class="field"><div class="label">Joint Pain:</div><div class="value">${record.formData.hasJointPain}</div></div>
-            <div class="field"><div class="label">Intensity:</div><div class="value">${record.formData.painIntensity}/10 (VAS Scale)</div></div>
-            <div class="field full"><div class="label">Affected Joints:</div><div class="value">${(record.formData.affectedJoints || []).join(', ') || 'None'}</div></div>
-        </div>
-    </div>
-
-    <!-- Symptoms -->
-    <div class="section">
-        <h2>Symptoms</h2>
-        <div class="grid">
-            <div class="field"><div class="label">Swelling:</div><div class="value">${record.formData.swelling || 'N/A'}</div></div>
-            <div class="field"><div class="label">Stiffness:</div><div class="value">${record.formData.stiffness || 'N/A'}</div></div>
-            <div class="field"><div class="label">Crepitus:</div><div class="value">${record.formData.crepitus || 'N/A'}</div></div>
-            <div class="field"><div class="label">Fever:</div><div class="value">${record.formData.fever || 'N/A'}</div></div>
-        </div>
-    </div>
-
-    <!-- Labs WITH UNITS -->
-    <div class="section">
-        <h2>Lab Results</h2>
-        <div class="grid">
-            <div class="field"><div class="label">ESR:</div><div class="value">${record.formData.labs?.esr || 'N/A'} mm/hr</div></div>
-            <div class="field"><div class="label">CRP:</div><div class="value">${record.formData.labs?.crp || 'N/A'} mg/L</div></div>
-            <div class="field"><div class="label">RA Factor:</div><div class="value">${record.formData.labs?.raFactor || 'N/A'} IU/mL</div></div>
-            <div class="field"><div class="label">Uric Acid:</div><div class="value">${record.formData.labs?.uricAcid || 'N/A'} mg/dL</div></div>
-        </div>
-    </div>
-
-    <!-- Notes -->
-    <div class="section">
-        <h2>Doctor Notes</h2>
-        <div>${record.formData.notes || 'N/A'}</div>
-    </div>
-
-    <!-- Footer -->
-    <div class="footer">
-        Generated by Sandhigata Vata Diagnosis System
-    </div>
-
-</div>
-
 </body>
-</html>
-`;
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-            printWindow.focus();
-            printWindow.print();
-            printWindow.close();
+</html>`;
+
+            // Use Iframe for printing to avoid popup blockers and improve mobile reliability
+            let printFrame = document.getElementById('printFrame');
+            if (!printFrame) {
+                printFrame = document.createElement('iframe');
+                printFrame.id = 'printFrame';
+                printFrame.style.display = 'none';
+                document.body.appendChild(printFrame);
+            }
+
+            const frameDoc = printFrame.contentWindow.document;
+            frameDoc.open();
+            frameDoc.write(printContent);
+            frameDoc.close();
+
+            // Give it a small delay for styles and images to load
+            setTimeout(() => {
+                printFrame.contentWindow.focus();
+                printFrame.contentWindow.print();
+            }, 500);
         }
 
         function downloadPatientPDF(recordId) {
