@@ -752,8 +752,8 @@
                             <div class="mt-4">
                                 <dt class="text-sm font-semibold mb-2">X-ray Image Preview:</dt>
                                 <dd>
-                                    <div class="border rounded-lg overflow-hidden bg-gray-100 mb-2">
-                                        <img src="${record.formData.labs.xrayUrl}" alt="X-ray" class="w-full h-auto max-h-64 object-contain mx-auto shadow-inner" loading="lazy">
+                                    <div class="border rounded-lg overflow-hidden bg-gray-100 mb-2" style="min-height: 200px;">
+                                        <img src="${record.formData.labs.xrayUrl}" alt="X-ray" class="w-full h-auto max-h-64 object-contain mx-auto shadow-inner">
                                     </div>
                                     <a href="${record.formData.labs.xrayUrl}" target="_blank" class="text-blue-600 hover:underline text-xs flex items-center gap-1">
                                         <span class="material-icons" style="font-size: 14px;">open_in_new</span>
@@ -950,7 +950,10 @@
             if (!printFrame) {
                 printFrame = document.createElement('iframe');
                 printFrame.id = 'printFrame';
-                printFrame.style.display = 'none';
+                printFrame.style.position = 'absolute';
+                printFrame.style.width = '0px';
+                printFrame.style.height = '0px';
+                printFrame.style.left = '-9999px';
                 document.body.appendChild(printFrame);
             }
 
@@ -959,11 +962,8 @@
             frameDoc.write(printContent);
             frameDoc.close();
 
-            // Give it a small delay for styles and images to load
-            setTimeout(() => {
-                printFrame.contentWindow.focus();
-                printFrame.contentWindow.print();
-            }, 500);
+            printFrame.contentWindow.focus();
+            printFrame.contentWindow.print();
         }
 
         function downloadPatientPDF(recordId) {
